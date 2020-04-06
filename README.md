@@ -1,4 +1,5 @@
 # AoRgbExtractor
+
 A command-line tool for extracting images from .ao/.rgb ImaginEngine game files, written in python.
 
 ## How to install it
@@ -18,4 +19,4 @@ python3 extract\_aorgb.py from\_path \[output\_dir\]
 
 where "from\_path" is the folder where are located the .ao and .rgb files
 
-and output\_dir (optional) is the folder where the image files will be extracted; if not given it will be the same as from\_path
+and "output\_dir" (optional) is the folder where the image files will be extracted; if not given it will be the same as from\_path
