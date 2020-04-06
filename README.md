@@ -1,6 +1,6 @@
 # AoRgbExtractor
 
-A command-line tool for extracting images from .ao/.rgb ImaginEngine game files, written in python.
+A command-line tool for extracting images from .ao/.rgb The Learning Company game files, written in python.
 
 ## How to install it
 
