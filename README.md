@@ -35,7 +35,7 @@ the options available are:
 
 ### Extracting from a .bul file alone
 
-Run in the command line the extract_inx.py script: 
+Run in the command line the extract_bul.py script: 
 
 python3 extract\_bul.py <options> bul\_file \[output\_dir\]
 
@@ -51,7 +51,7 @@ NOTE: This TRIES to extract from .bul files, searching for possibles filenames i
 
 ### Building .bul/.inx files
 
-Run in the command line the extract_inx.py script: 
+Run in the command line the build_inx.py script: 
 
 python3 build\_inx.py <options> from\_path \[output\_dir\]
 
