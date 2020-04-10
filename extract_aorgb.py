@@ -34,12 +34,12 @@ def decompress(data, maxlen = None):
             data_dec += tmp
             off += data[off]
         off += 1
-    return data_dec, off
+    return data_dec
 
 def get_img(data, base, l_color):
     width = value(data[base+2:base+4])
     height = value(data[base+4:base+6])
-    data_dec, length = decompress(data[base+6:], width*height)
+    data_dec = decompress(data[base+6:], width*height)
     img = []
     i = 0
     nb = 0
@@ -53,10 +53,11 @@ def get_img(data, base, l_color):
             i += 1
         i += 1
         nb += 1
-    return Image.frombytes(mode='RGBA', size=(width,height),data=b''.join(img), decoder_name='raw'), length+6
+    return Image.frombytes(mode='RGBA', size=(width,height),data=b''.join(img), decoder_name='raw')
 
-def extract_ao(filename, output):
-    print("Extracting from "+filename+"...")
+def extract_ao(filename, output, verbose=False):
+    if verbose:
+        print("Extracting from "+filename+"...")
     try:
         with open(filename+".rgb", "rb") as file:
             l_color = get_palette(file.read())
@@ -76,31 +77,40 @@ def extract_ao(filename, output):
     off += 2+value(data[off:off+2])*8
     nb = 0
     for i in range(value(data[0x2:0x4])):
-        if data[off]==0x4 and data[off+1]==0x0:
-            img, length = get_img(data, off, l_color)
-            off += length
-            nb += 1
-            img.save(output+os.path.sep+"nb"+str(nb)+".png", "PNG")
-        else:
-            raise Exception("Invalid start at "+hex(off))
+        img = get_img(data, off+value(data[0xa+i*4:0xa+i*4+4]), l_color)
+        nb += 1
+        img.save(output+os.path.sep+"nb"+str(nb)+".png", "PNG")
 
-def search_ao(path=".", out=None):
+def search_ao(path=".", out=None, verbose=False):
     if out==None:
         out = path
     lst = os.listdir(path)
     for elt in lst:
         if elt.split(".")[-1]=="ao":
             try:
-                extract_ao(path+os.path.sep+elt[:-3], out+os.path.sep+elt[:-3])
+                extract_ao(path+os.path.sep+elt[:-3], out+os.path.sep+elt[:-3], verbose)
             except:pass
         elif os.path.isdir(path+os.path.sep+elt):
-            search_ao(path+os.path.sep+elt, out+os.path.sep+elt)
+            search_ao(path+os.path.sep+elt, out+os.path.sep+elt, verbose)
 
 arg = sys.argv
-if len(arg)>=2:
-    if len(arg)>=3:
-        search_ao(arg[1], arg[2])
+end_opt = 1
+lst_opts = []
+while end_opt<len(arg):
+    opt = arg[end_opt]
+    if opt[0]!="-":
+        break
     else:
-        search_ao(arg[1])
+        lst_opts.append(opt)
+    end_opt += 1
+if len(arg)-end_opt>0:
+    verbose = False
+    if "-v" in lst_opts:
+        verbose = True
+    leftovers = False
+    if len(arg)-end_opt>=2:
+        search_ao(arg[end_opt], arg[end_opt+1], verbose=verbose)
+    else:
+        search_ao(arg[end_opt], verbose=verbose)
 else:
-    print("Usage: "+arg[0]+" from_path [output_dir]")
+    print("Usage: "+arg[0]+" <options> from_path [output_dir]\n\nOptions: \n -v Verbose")
