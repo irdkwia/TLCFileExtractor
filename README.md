@@ -1,6 +1,6 @@
 # TLC files extractor
 
-A command-line tool for extracting from various files The Learning Company games written in python 3, which includes: 
+A command-line tool for extracting from various files of The Learning Company games written in python 3, which includes: 
 
 - A script for extracting files from .inx/.bul
 - A script for extracting files from a .bul file alone
