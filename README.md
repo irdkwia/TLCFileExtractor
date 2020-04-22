@@ -6,6 +6,8 @@ A command-line tool for extracting from various files of The Learning Company ga
 - A script for extracting files from a .bul file alone
 - A script for building .inx/.bul from a folder
 - A script for extracting images from .ao/.rgb
+- A script for building .ao/.rgb from images
+- A script for extracting files from .rsc
 
 ## How to install it
 
@@ -76,3 +78,36 @@ and "output\_dir" (optional) is the folder where the image files will be extract
 the only option currently available is: 
 
 -v Verbose: prints the list of .ao/.rgb files extracted
+
+Note: Since this version, the extractor adds an xml file called "anim.xml" that stores additionnal metadata, mainly for the animation, which is useful to build an .ao/.rgb file again. If you extracted and edited the extracted images with an older version then extract from them again and replace the images by the one you edited.
+
+### Building .ao/.rgb files
+
+Run in the command line the build_aorgb.py script: 
+
+python3 build\_aorgb.py <options> from\_path \[output\_dir\]
+
+where "from\_path" is the folder where are located the image files you want to build; it recognizes each folder with a "anim.xml" file in it as a .ao/.rgb file to build
+
+and "output\_dir" (optional) is the folder where the .ao/.rgb files will be extracted; if not given it will be the same as from\_path
+
+the only option currently available is: 
+
+-v Verbose: prints the list of .ao/.rgb files built
+
+Notes: As it's not optimized as it should, the algorithm is REALLY slow, so it is recommended to only build the .ao/.rgb files you need to. Also, there are still some parts of the metadata that are unknown, hence the "unknown" tags in the xml file. In later versions, the xml structure will be altered so these xml files could be incompatible. As a result, always build with the same version you extracted them
+
+### Extracting from a .rsc file
+
+Run in the command line the extract_rsc.py script: 
+
+python3 extract\_rsc.py <options> rsc\_file \[output\_dir\]
+
+where "rsc\_file" is the path to the .rsc file
+
+and "output\_dir" (optional) is the folder where the files will be extracted; if not given it will be in the same folder as the .rsc file; the files have a default as they are not named in the rsc file
+
+the only option currently available is: 
+
+-v Verbose: prints the list of files extracted
+

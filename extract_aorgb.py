@@ -2,36 +2,42 @@ import os, shutil
 from PIL import Image
 import sys
 
-def value(bytes_list):
+def value(bytes_list, signed = False):
     n = 0
     for i, b in enumerate(bytes_list):
         n += b * (256**i)
-    return n
+    if signed and n>=(256**len(bytes_list))//2:
+        return n-(256**len(bytes_list))
+    else:
+        return n
 
 def get_palette(data):
     l_color = []
     for i in range(len(data)//6):
         l_color.append(bytes([data[i*6], data[i*6+2], data[i*6+4], 255]))
     return l_color
-
 def decompress(data, maxlen = None):
     data_dec = b''
     off = 0
     zeros = 0
+    #print("Data:")
     while off<len(data) and (maxlen!=None and len(data_dec)<maxlen+zeros):
         if data[off]==0:
             data_dec += bytes(data[off+1]*2)
             zeros += data[off+1]
+            #print("Style 00:", data[off+1])
             off += 1
         elif data[off]==255:
             tmp = bytes([data[off+1]]*data[off+2]).replace(b"\x00", b"\x00\xFF")
             zeros += tmp.count(b"\x00\xFF")
             data_dec += tmp
+            #print("Style FF:", data[off+2])
             off += 2
         else:
             tmp = data[off+1:off+1+data[off]].replace(b"\x00", b"\x00\xFF")
             zeros += tmp.count(b"\x00\xFF")
             data_dec += tmp
+            #print("Normal Style:", data[off])
             off += data[off]
         off += 1
     return data_dec
@@ -73,13 +79,40 @@ def extract_ao(filename, output, verbose=False):
     else:
         shutil.rmtree(output)
         os.mkdir(output)
-    off = 0xe+value(data[0x2:0x4])*4
+    str_xml = "<obj>\n"
+    str_xml += "\t<header>\n"
+    str_xml += "\t\t<speed>"+str(value(data[0x4:0x6]))+"</speed>\n"
+    str_xml += "\t\t<unknown1>"+str(value(data[0x6:0x8]))+"</unknown1>\n"
+    str_xml += "\t\t<unknown2>"+str(value(data[0x8:0xa]))+"</unknown2>\n"
+    str_xml += "\t</header>\n"
+    off = 0xa+value(data[0x2:0x4])*4
+    str_xml += "\t<header2>\n"
+    str_xml += "\t\t<unknown1>"+str(value(data[off:off+2]))+"</unknown1>\n"
+    str_xml += "\t\t<unknown2>"+str(value(data[off+2:off+4]))+"</unknown2>\n"
+    str_xml += "\t</header2>\n"
+    off += 4
+    str_xml += "\t<animation>\n"
+    for i in range(value(data[off:off+2])):
+        str_xml += "\t\t<part>\n"
+        str_xml += "\t\t\t<xpos>"+str(value(data[off+2+i*8:off+2+i*8+2], signed=True))+"</xpos>\n"
+        str_xml += "\t\t\t<ypos>"+str(value(data[off+2+i*8+2:off+2+i*8+4], signed=True))+"</ypos>\n"
+        img = value(data[off+2+i*8+4:off+2+i*8+6], signed=True)
+        if img>=0:
+            img+=1
+        str_xml += "\t\t\t<img>"+str(img)+"</img>\n"
+        str_xml += "\t\t\t<other>"+str(value(data[off+2+i*8+6:off+2+i*8+8], signed=True))+"</other>\n"
+        str_xml += "\t\t</part>\n"
+    str_xml += "\t</animation>\n"
+    str_xml += "</obj>"
     off += 2+value(data[off:off+2])*8
     nb = 0
     for i in range(value(data[0x2:0x4])):
         img = get_img(data, off+value(data[0xa+i*4:0xa+i*4+4]), l_color)
         nb += 1
         img.save(output+os.path.sep+"nb"+str(nb)+".png", "PNG")
+    with open(output+os.path.sep+"anim.xml", "w") as file:
+        file.write(str_xml)
+        file.close()
 
 def search_ao(path=".", out=None, verbose=False):
     if out==None:

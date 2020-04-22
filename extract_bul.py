@@ -1,12 +1,8 @@
 import os, shutil
 import sys
+from common.tools import *
 
 AVAILABLE_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz._0123456789"
-def value(bytes_list):
-    n = 0
-    for i, b in enumerate(bytes_list):
-        n += b * (256**i)
-    return n
 
 def extract_bul(filename, out = None, verbose = False):
     available_ext = ["nfnt", "wav", "ao", "rgb", "jpg", "b16", "txt"]

@@ -1,10 +1,6 @@
 import os, shutil
 import sys
-def value(bytes_list):
-    n = 0
-    for i, b in enumerate(bytes_list):
-        n += b * (256**i)
-    return n
+from common.tools import *
 
 def extract_bul(data_inx, offsetStart, in_dir, out, verbose=False, leftovers=False):
     filename = ""
@@ -74,9 +70,7 @@ def extract_inx(filename, out=None, verbose=False, leftovers=False):
     if in_dir=='':
         in_dir = '.'
     if out==None:
-        out = os.path.dirname(filename)
-        if out=='':
-            out = '.'
+        out = in_dir
     with open(filename, "rb") as file:
         data = file.read()
         file.close()

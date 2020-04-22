@@ -1,13 +1,7 @@
 import os, shutil
 import sys
 import time
-
-def byte_value(value, nums = 4):
-    lst_b = []
-    for i in range(nums):
-        lst_b.append(value%256)
-        value//=256
-    return bytes(lst_b)
+from common.tools import *
 
 def build_section(section, offsetStart):
     header = byte_value(len(section))
