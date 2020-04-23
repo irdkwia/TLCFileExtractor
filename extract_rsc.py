@@ -27,7 +27,8 @@ def extract_rsc(filename, out=None, verbose=False):
         if verbose:
             print(hex(off))
         data_file = get_section(data, value(data[off:off+2]), value(data[off+2:off+4]))
-        mime_type = header[off_head+6:off_head+10].decode(encoding="ascii")
+        size = value(header[off_head:off_head+2])
+        mime_type = header[off_head+6:off_head+10].replace(b'\x00', b'').decode(encoding="ascii")
         if mime_type in MIME_TYPES:
             real_type = MIME_TYPES[mime_type]
         else:
@@ -39,7 +40,7 @@ def extract_rsc(filename, out=None, verbose=False):
         with open(out+os.path.sep+str(dict_types[real_type])+"."+real_type, "wb") as file:
             file.write(data_file)
             file.close()
-        off_head+=0xc
+        off_head+=size
         off += 0xc
         nb_ent -= 1
         if nb_ent==0:
