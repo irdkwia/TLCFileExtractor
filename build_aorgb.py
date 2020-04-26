@@ -6,6 +6,7 @@ from common.tools import *
 def getImageMasks(lst_imgs):
     new_lst = []
     for im in lst_imgs:
+        im = im.convert("RGBA")
         int_mask = []
         for pixel in im.getdata():
             if pixel[3]>=128:
@@ -13,7 +14,7 @@ def getImageMasks(lst_imgs):
             else:
                 int_mask.append(255)
         mask = Image.frombytes(mode="L", data = bytes(int_mask), size = im.size)
-        im.convert("RGB")
+        im = im.convert("RGB")
         new_lst.append((im, mask))
     return new_lst
 
@@ -123,7 +124,91 @@ def getCompressedDataPalette(lst_imgs_mask, palette = None):
         new_lst.append(bytes(int_data))
     return new_lst
 
-def extract_animations(path, out, elt, verbose):
+def getDataMode2(lst_img):
+    lst_dat = []
+    for im in lst_img:
+        width = im.size[0]
+        height = im.size[1]
+        header = b'\x02\x00'+byte_value(im.size[0], 2)+byte_value(height, 4)
+        data = b''
+        line_data = []
+        off = len(header)+height*4
+        last_state = -1
+        tmp = 0
+        for i, pixel in enumerate(im.getdata()):
+            r = pixel[0]//8
+            g = pixel[1]//8
+            b = pixel[2]//8
+            color = b+(g*64)+(r*2048)
+            a = pixel[3]
+            if a==0:
+                cur_state = 0
+            elif a==255:
+                cur_state = 1
+            else:
+                cur_state = 2
+            if i%width==0 or cur_state!=last_state:
+                if last_state>=0:
+                    line_data.append(last_state%256)
+                    line_data.append(last_state//256)
+                    if last_state==0:
+                        line_data.append(tmp%256)
+                        line_data.append(tmp//256)
+                    elif last_state==1:
+                        line_data.append(len(tmp)%256)
+                        line_data.append(len(tmp)//256)
+                        for t in tmp:
+                            line_data.append(t%256)
+                            line_data.append(t//256)
+                    elif last_state==2:
+                        line_data.append(len(tmp)%256)
+                        line_data.append(len(tmp)//256)
+                        for t in tmp:
+                            line_data.append(t[0]%256)
+                            line_data.append(t[0]//256)
+                            line_data.append(t[1])
+                if cur_state==0:
+                    tmp = 1
+                elif cur_state==1:
+                    tmp = [color]
+                elif cur_state==2:
+                    tmp = [(color, a)]
+                last_state = cur_state
+            else:
+                if cur_state==0:
+                    tmp += 1
+                elif cur_state==1:
+                    tmp.append(color)
+                elif cur_state==2:
+                    tmp.append((color, a))
+            if i%width==0:
+                data += bytes(line_data)
+                line_data = []
+                header += byte_value(off+len(data), 4)
+        if last_state>=0:
+            line_data.append(last_state%256)
+            line_data.append(last_state//256)
+            if last_state==0:
+                line_data.append(tmp%256)
+                line_data.append(tmp//256)
+            elif last_state==1:
+                line_data.append(len(tmp)%256)
+                line_data.append(len(tmp)//256)
+                for t in tmp:
+                    line_data.append(t%256)
+                    line_data.append(t//256)
+            elif last_state==2:
+                line_data.append(len(tmp)%256)
+                line_data.append(len(tmp)//256)
+                for t in tmp:
+                    line_data.append(t[0]%256)
+                    line_data.append(t[0]//256)
+                    line_data.append(t[1])
+        data += bytes(line_data)
+        lst_dat.append(header+data)
+    return lst_dat
+
+def extract_animations(path, out, elt, verbose, mode = None):
     if verbose:
         print("Building "+elt+".ao...")
     tree = ElementTree.parse(path+os.path.sep+elt+os.path.sep+"anim.xml")
@@ -134,11 +219,19 @@ def extract_animations(path, out, elt, verbose):
         lst.append(Image.open(path+os.path.sep+elt+os.path.sep+"nb"+str(nb)+".png"))
         nb+=1
     nb-=1
-    lst_imgs_mask = getImageMasks(lst)
-    pal = getImageCommonPalette(lst_imgs_mask)
-    lst_dat = getCompressedDataPalette(lst_imgs_mask, pal)
     header = root.find("header")
-    bytes_ao = b'\x01\x00'+byte_value(nb, 2)+byte_value(int(header.findtext("speed").strip()),2)+byte_value(int(header.findtext("unknown1").strip()), 2)+byte_value(int(header.findtext("unknown2").strip()), 2)
+    if mode == None:
+        if header.findtext("mode")==None:
+            mode = int(header.findtext("unknown2").strip())
+        else:
+            mode = int(header.findtext("mode").strip())
+    if mode==1:
+        lst_imgs_mask = getImageMasks(lst)
+        pal = getImageCommonPalette(lst_imgs_mask)
+        lst_dat = getCompressedDataPalette(lst_imgs_mask, pal)
+    elif mode==2:
+        lst_dat = getDataMode2(lst)
+    bytes_ao = b'\x01\x00'+byte_value(nb, 2)+byte_value(int(header.findtext("speed").strip()),2)+byte_value(int(header.findtext("unknown1").strip()), 2)+byte_value(mode, 2)
     data = b''
     for d in lst_dat:
         bytes_ao += byte_value(len(data), 4)
@@ -161,27 +254,28 @@ def extract_animations(path, out, elt, verbose):
     with open(out+os.path.sep+elt+".ao", 'wb') as file:
         file.write(bytes_ao)
         file.close()
-    bytes_pal = b''
-    for i in range(256):
-        if i<len(pal):
-            c = pal[i]
-        else:
-            c = (0,0,0)
-        bytes_pal += bytes([c[0], c[0], c[1], c[1], c[2], c[2]])
-    with open(out+os.path.sep+elt+".rgb", 'wb') as file:
-        file.write(bytes_pal)
-        file.close()
+    if mode==1:
+        bytes_pal = b''
+        for i in range(256):
+            if i<len(pal):
+                c = pal[i]
+            else:
+                c = (0,0,0)
+            bytes_pal += bytes([c[0], c[0], c[1], c[1], c[2], c[2]])
+        with open(out+os.path.sep+elt+".rgb", 'wb') as file:
+            file.write(bytes_pal)
+            file.close()
 
-def search_animations(path=".", out=None, verbose=False):
+def search_animations(path=".", out=None, verbose=False, mode=None):
     if out==None:
         out = path
     lst = os.listdir(path)
     for elt in lst:
         if os.path.isdir(path+os.path.sep+elt):
             if os.path.exists(path+os.path.sep+elt+os.path.sep+"anim.xml"):
-                extract_animations(path, out, elt, verbose)
+                extract_animations(path, out, elt, verbose, mode)
             else:
-                search_animations(path+os.path.sep+elt, out+os.path.sep+elt, verbose)
+                search_animations(path+os.path.sep+elt, out+os.path.sep+elt, verbose, mode)
 
 arg = sys.argv
 end_opt = 1
@@ -197,10 +291,14 @@ if len(arg)-end_opt>0:
     verbose = False
     if "-v" in lst_opts:
         verbose = True
-    leftovers = False
+    mode = None
+    if "-m=1" in lst_opts:
+        mode = 1
+    elif "-m=2" in lst_opts:
+        mode = 2
     if len(arg)-end_opt>=2:
-        search_animations(arg[end_opt], arg[end_opt+1], verbose=verbose)
+        search_animations(arg[end_opt], arg[end_opt+1], verbose=verbose, mode=mode)
     else:
-        search_animations(arg[end_opt], verbose=verbose)
+        search_animations(arg[end_opt], verbose=verbose, mode=mode)
 else:
-    print("Usage: "+arg[0]+" <options> from_path [output_dir]\n\nOptions: \n -v Verbose")
+    print("Usage: "+arg[0]+" <options> from_path [output_dir]\n\nOptions: \n -v Verbose\n -m=X Force mode X")

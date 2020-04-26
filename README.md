@@ -91,11 +91,14 @@ where "from\_path" is the folder where are located the image files you want to b
 
 and "output\_dir" (optional) is the folder where the .ao/.rgb files will be extracted; if not given it will be the same as from\_path
 
-the only option currently available is: 
+the options available are: 
 
 -v Verbose: prints the list of .ao/.rgb files built
+-m=X Force mode X: Forces the animation files to be built using mode X instead of the one specified in animation (tag "unknown2" or "mode" in the header)
 
-Notes: As it's not optimized as it should, the algorithm is REALLY slow, so it is recommended to only build the .ao/.rgb files you need to. Also, there are still some parts of the metadata that are unknown, hence the "unknown" tags in the xml file. In later versions, the xml structure will be altered so these xml files could be incompatible. As a result, always build with the same version you extracted them
+Notes: 
+There are currently 2 modes supported ("1" and "2"). The 1st mode allows only 256 colors and uses a .rgb file for the palette while the 2nd mode allows more colors and transparency levels but is more memory-consuming (about 2 to 3 times more than mode 1).
+As mode 1 is not optimized as it should, the algorithm is REALLY slow, so it is recommended to only build the .ao/.rgb files you need to. Also, there are still some parts of the metadata that are unknown, hence the "unknown" tags in the xml file. In later versions, the xml structure will be altered so these xml files could be incompatible. As a result, always build with the same version you extracted them.
 
 ### Extracting from a .rsc file
 
