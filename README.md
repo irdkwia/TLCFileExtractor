@@ -8,15 +8,15 @@ A command-line tool for extracting from various files of The Learning Company ga
 - A script for extracting images from .ao/.rgb
 - A script for building .ao/.rgb from images
 - A script for extracting files from .rsc
+- A script for building .rsc files
 
 ## How to install it
 
 You need to have python 3.x installed (see https://www.python.org/downloads/)
 
-For the .ao/.rgb files extractor, you need to install the pillow package for python3 (see https://pillow.readthedocs.io/en/stable/installation.html)
+For the .ao/.rgb files extractor/builder, you need to install the pillow package for python3 (see https://pillow.readthedocs.io/en/stable/installation.html)
 
 Then, clone this repository
-
 
 ## How to use it
 
@@ -89,7 +89,7 @@ python3 build\_aorgb.py <options> from\_path \[output\_dir\]
 
 where "from\_path" is the folder where are located the image files you want to build; it recognizes each folder with a "anim.xml" file in it as a .ao/.rgb file to build
 
-and "output\_dir" (optional) is the folder where the .ao/.rgb files will be extracted; if not given it will be the same as from\_path
+and "output\_dir" (optional) is the folder where the .ao/.rgb files will be built; if not given it will be the same as from\_path
 
 the options available are: 
 
@@ -100,17 +100,31 @@ Notes:
 There are currently 2 modes supported ("1" and "2"). The 1st mode allows only 256 colors and uses a .rgb file for the palette while the 2nd mode allows more colors and transparency levels but is more memory-consuming (about 2 to 3 times more than mode 1).
 As mode 1 is not optimized as it should, the algorithm is REALLY slow, so it is recommended to only build the .ao/.rgb files you need to. Also, there are still some parts of the metadata that are unknown, hence the "unknown" tags in the xml file. In later versions, the xml structure will be altered so these xml files could be incompatible. As a result, always build with the same version you extracted them.
 
-### Extracting from a .rsc file
+### Extracting from .rsc files
 
 Run in the command line the extract_rsc.py script: 
 
-python3 extract\_rsc.py <options> rsc\_file \[output\_dir\]
+python3 extract\_rsc.py <options> from\_path \[output\_dir\]
 
-where "rsc\_file" is the path to the .rsc file
+where "from\_path" is the folder where are located the .rsc files
 
-and "output\_dir" (optional) is the folder where the files will be extracted; if not given it will be in the same folder as the .rsc file; the files have a default as they are not named in the rsc file
+and "output\_dir" (optional) is the folder where the files will be extracted; if not given it will be in the same folder as the .rsc files; the files have a default as they are not named in the rsc file
 
 the only option currently available is: 
 
 -v Verbose: prints the list of files extracted
+
+### Building .rsc files
+
+Run in the command line the build_rsc.py script: 
+
+python3 build\_rsc.py <options> from\_path \[output\_dir\]
+
+where "from\_path" is the folder where are located the resources files you want to build; it recognizes each folder with a "rsc.xml" file in it as a .rsc file to build
+
+and "output\_dir" (optional) is the folder where the .rsc files will be built; if not given it will be the same as from\_path
+
+the only option currently available is: 
+
+-v Verbose: prints the list of .rsc files built
 

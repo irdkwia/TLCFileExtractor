@@ -1,17 +1,7 @@
 import os, shutil
 from PIL import Image
 import sys
-
-VERSION = "3.2"
-
-def value(bytes_list, signed = False):
-    n = 0
-    for i, b in enumerate(bytes_list):
-        n += b * (256**i)
-    if signed and n>=(256**len(bytes_list))//2:
-        return n-(256**len(bytes_list))
-    else:
-        return n
+from common.tools import *
 
 def get_palette(data):
     l_color = []
@@ -80,16 +70,16 @@ def decompress_m2(data, maxlen = None):
             for x in range(count):
                 val = value(data[off:off+2])
                 b = val%32
-                g = (val>>6)%32
-                r = (val>>11)%32
+                g = (val>>5)%32
+                r = (val>>10)%32
                 data_dec += bytes([r*8, g*8, b*8, 255])
                 off+=2
         elif style==2:
             for x in range(count):
                 val = value(data[off:off+2])
                 b = val%32
-                g = (val>>6)%32
-                r = (val>>11)%32
+                g = (val>>5)%32
+                r = (val>>10)%32
                 data_dec += bytes([r*8, g*8, b*8, data[off+2]])
                 off+=3
         else:

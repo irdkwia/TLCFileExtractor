@@ -1,3 +1,8 @@
+VERSION = "4.0"
+
+SECTION_SIZE = 0x200
+MIME_TYPES = {"WAVE":"wav", "RRGB":"rgb", "XXML":"xml", "ASEQ":"ao", "JPEG":"jpg", "TEXT":"txt", "NFNT":"nfnt"}
+
 def byte_value(value, nums = 4):
     if value<0:
         value += 256**nums

@@ -139,7 +139,7 @@ def getDataMode2(lst_img):
             r = pixel[0]//8
             g = pixel[1]//8
             b = pixel[2]//8
-            color = b+(g*64)+(r*2048)
+            color = b+(g*32)+(r*1024)
             a = pixel[3]
             if a==0:
                 cur_state = 0
@@ -234,6 +234,7 @@ def extract_animations(path, out, elt, verbose, mode = None):
     bytes_ao = b'\x01\x00'+byte_value(nb, 2)+byte_value(int(header.findtext("speed").strip()),2)+byte_value(int(header.findtext("unknown1").strip()), 2)+byte_value(mode, 2)
     data = b''
     for d in lst_dat:
+        data += b'AO2C'+byte_value(len(d), 4)
         bytes_ao += byte_value(len(data), 4)
         data += d
     header2 = root.find("header2")
