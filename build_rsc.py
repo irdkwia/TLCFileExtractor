@@ -1,5 +1,4 @@
 import os, sys
-from PIL import Image
 from xml.etree import ElementTree
 from common.tools import *
 
