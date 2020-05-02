@@ -89,4 +89,4 @@ if len(arg)-end_opt>0:
     else:
         search_rsc(arg[end_opt], verbose=verbose)
 else:
-    print("Usage: "+arg[0]+" <options> rsc_file [output_dir]\n\nOptions: \n -v Verbose")
+    print("Usage: "+arg[0]+" <options> from_path [output_dir]\n\nOptions: \n -v Verbose")
